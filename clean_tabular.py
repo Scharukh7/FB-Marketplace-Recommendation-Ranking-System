@@ -5,7 +5,9 @@ import yaml
 import numpy as np
 import os
 from os.path import isfile
-import sklearn
+import geopy
+from geopy.geocoders import Nominatim
+from geopy.extra.rate_limiter import RateLimiter
 
 class CleanTabularFB():
     
@@ -81,9 +83,31 @@ class CleanTabularFB():
         #then split into 'sub_category'
         self.fb_df["sub_category"] = self.fb_df["category"].apply(
             lambda x: x.split("/")[1].strip())
-            
-    #def convert_category_to_num(self):
+    
+    def geocode_columns_from_locations(self):
+        #iterate through location column and get the latitude and longitude from cities
+        geocoder = Nominatim(user_agent='GetLoc')
+        geocode = RateLimiter(geocoder.geocode, min_delay_seconds=0.3, return_value_on_exception=None)
+        #location = geocode.reverse(, timeout=10, language='en')
+        self.fb_df['geo_location'] = self.fb_df['location'].apply(geocode)
+        self.fb_df['longiude_latitude'] = self.fb_df['geo_location'].apply(
+        lambda loc: tuple(loc.point) if loc else None)
+    
+    def convert_column_to_num(self, column: str):
         #convert the text data into number for the ML model
+        #get rid of any special characters from the columns
+        self.fb_df[column] = self.fb_df[column].str.lower().replace('[^0-9a-zA-Z]+', '_', regex=True)
+        #category encodings
+        category_encodings = pd.get_dummies(
+            self.fb_df[column], prefix=column, drop_first=True)
+        #merge the cleaned dataframes
+        self.fb_df = pd.concat(
+            [self.fb_df, category_encodings], axis=1)
+
+    def remove_duplicate_data(self):
+        print("Removing duplicates.")
+        columns = ["product_name", "product_description", "location"]
+        self.fb_df.drop_duplicates(subset=columns, keep="first", )
     
     def save_cleaned_data(self):
         save_path = "data/cleaned_tabular_data.json"
@@ -99,6 +123,9 @@ if __name__ == '__main__':
     clean.outliers_remove_NA()
     clean.clean_price_sign()
     clean.remove_outliers_from_price()
+    clean.split_category_column()
+    clean.geocode_columns_from_locations()
+    clean.convert_column_to_num('main_category')
     clean.save_cleaned_data()
 
    
