@@ -96,18 +96,13 @@ class CleanTabularFB():
     def convert_column_to_num(self, column: str):
         #convert the text data into number for the ML model
         #get rid of any special characters from the columns
-        self.fb_df[column] = self.fb_df[column].str.lower().replace('[^0-9a-zA-Z]+', '_', regex=True)
+        self.fb_df[column] = self.fb_df[column].str.lower().replace('\W+', '_', regex=True)
         #category encodings
         category_encodings = pd.get_dummies(
             self.fb_df[column], prefix=column, drop_first=True)
         #merge the cleaned dataframes
         self.fb_df = pd.concat(
             [self.fb_df, category_encodings], axis=1)
-
-    def remove_duplicate_data(self):
-        print("Removing duplicates.")
-        columns = ["product_name", "product_description", "location"]
-        self.fb_df.drop_duplicates(subset=columns, keep="first", )
     
     def save_cleaned_data(self):
         save_path = "data/cleaned_tabular_data.json"
