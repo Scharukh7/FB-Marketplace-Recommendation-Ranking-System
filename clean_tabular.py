@@ -80,9 +80,6 @@ class CleanTabularFB():
         #split the category column into two, first 'main_category'
         self.fb_df["main_category"] = self.fb_df["category"].apply(
             lambda x: x.split("/")[0].strip())
-        #then split into 'sub_category'
-        self.fb_df["sub_category"] = self.fb_df["category"].apply(
-            lambda x: x.split("/")[1].strip())
     
     def geocode_columns_from_locations(self):
         #iterate through location column and get the latitude and longitude from cities
@@ -93,16 +90,9 @@ class CleanTabularFB():
         self.fb_df['longiude_latitude'] = self.fb_df['geo_location'].apply(
         lambda loc: tuple(loc.point) if loc else None)
     
-    def convert_column_to_num(self, column: str):
-        #convert the text data into number for the ML model
+    def remove_special_char(self, column: str):
         #get rid of any special characters from the columns
         self.fb_df[column] = self.fb_df[column].str.lower().replace('\W+', '_', regex=True)
-        #category encodings
-        category_encodings = pd.get_dummies(
-            self.fb_df[column], prefix=column, drop_first=True)
-        #merge the cleaned dataframes
-        self.fb_df = pd.concat(
-            [self.fb_df, category_encodings], axis=1)
     
     def save_cleaned_data(self):
         save_path = "data/cleaned_tabular_data.json"
@@ -120,7 +110,7 @@ if __name__ == '__main__':
     clean.remove_outliers_from_price()
     clean.split_category_column()
     clean.geocode_columns_from_locations()
-    clean.convert_column_to_num('main_category')
+    clean.remove_special_char('main_category')
     clean.save_cleaned_data()
 
    
