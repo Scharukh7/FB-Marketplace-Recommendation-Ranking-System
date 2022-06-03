@@ -13,7 +13,7 @@ class CleanImagesFB():
         self.resized = glob.glob(self.target_folder + '/*.jpg')
         makedirs(target_folder, exist_ok=True)
     
-    def clean_images(self, size: int=64) -> None:
+    def clean_images(self, size: int=224) -> None:
 
         final_size = (size, size)
         list_of_cleaned_images = [x.split("/")[-1]
