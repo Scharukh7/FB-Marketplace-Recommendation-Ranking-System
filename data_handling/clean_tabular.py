@@ -90,10 +90,6 @@ class CleanTabularFB():
         self.fb_df['longiude_latitude'] = self.fb_df['geo_location'].apply(
         lambda loc: tuple(loc.point) if loc else None)
     
-    def remove_special_char(self, column: str):
-        #get rid of any special characters from the columns
-        self.fb_df[column] = self.fb_df[column].str.lower().replace('\W+', '_', regex=True)
-    
     def save_cleaned_data(self):
         save_path = "data/cleaned_tabular_data.json"
         clean_data = self.fb_df
@@ -110,7 +106,6 @@ if __name__ == '__main__':
     clean.remove_outliers_from_price()
     clean.split_category_column()
     clean.geocode_columns_from_locations()
-    clean.remove_special_char('main_category')
     clean.save_cleaned_data()
 
    
